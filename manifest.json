@@ -6,7 +6,5 @@
     "default_icon": "images/lock.png",
 	"popup": "popup.html"
   },
-  "permissions": [
-    "http://api.flickr.com/"
-  ]
+  "permissions": []
 }
