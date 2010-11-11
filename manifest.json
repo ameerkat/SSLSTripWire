@@ -1,10 +1,12 @@
 {
-  "name": "SSLStripWire",
+  "name": "SSLSTripWire",
   "version": "0.1",
   "description": "Attempts to detect and prevent SSL Strip attacks.",
   "browser_action": {
     "default_icon": "images/lock.png",
 	"popup": "popup.html"
   },
-  "permissions": []
+  "permissions": [
+	"experimental"
+  ]
 }

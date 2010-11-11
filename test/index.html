@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>HTML5 Test Page</title>
+</head>
+<script type="text/javascript">
+/**
+ * HTML5 WebDB
+ */
+sslstripwire.webdb.db = null;
+
+sslstripwire.webdb.open = function() {
+	var dbSize = 5 * 1024 * 1024; // 5MB
+	sslstripwire.webdb.db = openDatabase('site_db', '0.1', 'SSLStripWire Site Database', dbSize);
+}
+
+sslstripwire.webdb.onError = function(tx, e) {
+	console.log('Error: ' + e.message );
+}
+
+sslstripwire.webdb.createTable = function() {
+	sslstripwire.webdb.db.transaction(function(tx) {
+		tx.executeSql('CREATE TABLE IF NOT EXISTS ' + 
+                  'site_db(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_count INT, http_count INT, last_visited DATETIME)', []);
+	});
+}
+
+sslstripwire.webdb.onSuccess = function(tx, r) {
+	
+}
+
+/**
+ * DB Select/Insert
+ */
+sslstripwire.webdb.getSiteStats = function(domain_url) {
+  sslstripwire.webdb.db.transaction(function(tx) {
+    tx.executeSql('SELECT * FROM site_db WHERE domain_url = ?', [domain_url], function(){}, 
+        sslstripwire.webdb.onError);
+  });
+}
+
+/**
+// INSERT OR UPDATE
+sslstripwire.webdb.logSite = function(domain_url) {
+  sslstripwire.webdb.db.transaction(function(tx){
+    var addedOn = new Date();
+    tx.executeSql('INSERT INTO site_db(todo, added_on) VALUES (?,?)', 
+        [todoText, addedOn],
+        sslstripwire.webdb.onSuccess,
+        sslstripwire.webdb.onError);
+    });
+}
+*/
+
+/**
+ * Main Program
+ */
+// Basic Outline
+
+/* 1. On a page request check if page is stored before and get statistics
+ * 		a. Add Navigation Handler to fire on request
+ *		b. Search local database for the site domain
+ *		c. Load statistics
+ */
+function onWebRequest(details){
+	var url = details.url;
+	var method = detais.method;
+	
+}
+
+// 2. Post statistics to the popup plugin
+
+// 3. If > 50% is HTTPS and this request is HTTP, then change icon and 
+// send alert
+
+// 4. Do Secure Search Engine Query, if in DB then force SSL if we want
+
+// 5. Insert this instance into database
+
+/**
+ * Event Handlers
+ */
+chrome.experimental.webRequest.onBeforeRequest.addListener(onWebRequest);
+
+/**
+ * Init
+ */
+sslstripwire.webdb.open();
+sslstripwire.webdb.createTable();
+
+</script>
+<body>
+
+</body>
+</html>
