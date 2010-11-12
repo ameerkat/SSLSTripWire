@@ -25,7 +25,11 @@ sslstripwire.settings.debug = true;
 sslstripwire.helpers.getDomain = function(url) {
 	var regex = /^https?:\/\/(.*?\.?.*?\..*?)\//;
 	var match = regex.exec(url);
-	return match[1];
+	if(match !== null){
+		return match[1];
+	} else {
+		return null;
+	}
 }
 
 sslstripwire.helpers.getMethod = function(url) {
@@ -73,6 +77,7 @@ sslstripwire.webdb.onError = function(tx, e) {
 
 /**
  * DB Functions
+ * These are all asynchronous
  */
 sslstripwire.webdb.getSiteStats = function(domain_url, callback) {
   sslstripwire.webdb.db.transaction(function(tx) {
@@ -135,10 +140,40 @@ sslstripwire.webdb.siteCount = function(callback) {
  *		b. Search local database for the site domain
  *		c. Load statistics
  */
-sslstripwire.handlers.onWebRequest = function(details){
-	var url = details.url;
+sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
+	// document.body.innerHTML = "<pre>Location: " + tab.url + "</pre>";
+	// document.write("<pre>Location: " + tab.url + "</pre>");
 	
+	var url = tab.url;
+	var http_count = 0;
+	var https_count = 0;
 	
+	sslstripwire.webdb.getSiteStats(url, function(tx, result){
+		if(result.rows.length > 0){
+			https_count = result.rows.item(0).https_count;
+			http_count = result.rows.item(0).http_count;
+			// Do Something Statistical Here
+		}
+		sslstripwire.webdb.logSite(url, null);
+	});
+}
+
+sslstripwire.handlers.onClick = function(tab) {
+	sslstripwire.webdb.getSiteStats(tab.url, function(tx, result){
+		var https_count = 0;
+		var http_count = 0;
+		var domain = sslstripwire.helpers.getDomain(tab.url);
+		if(result.rows.length > 0){
+			https_count = result.rows.item(0).https_count;
+			http_count = result.rows.item(0).http_count;
+			domain = result.rows.item(0).domain_url;
+		}
+		chrome.tabs.sendRequest(tab.id, 
+			{ https_count: https_count,
+			http_count: http_count,
+			domain: domain},
+			function(response){console.log(response);});
+	});
 }
 
 // 2. Post statistics to the popup plugin
@@ -151,18 +186,20 @@ sslstripwire.handlers.onWebRequest = function(details){
 // 5. Insert this instance into database
 
 /**
- * Event Handlers
- */
-/*Chrome API
-chrome.experimental.webRequest.onBeforeRequest.addListener(
-	sslstripwire.handlers.onWebRequest);
-*/
-
-
-/**
  * ============================================================================
  * Init
  * ============================================================================
  */
-sslstripwire.webdb.open();
-sslstripwire.webdb.createTable();
+function init(){
+	sslstripwire.webdb.open();
+	sslstripwire.webdb.createTable();
+	// If it's an extension
+	console.log("Determinig context of execution");
+	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){
+		console.log("Running as extension");
+		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);
+		chrome.browserAction.onClicked.addListener(sslstripwire.handlers.onClick);
+	} else {
+		console.log("Running as standalone page");
+	}
+}
