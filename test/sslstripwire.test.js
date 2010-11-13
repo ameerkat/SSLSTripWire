@@ -11,6 +11,11 @@ test("Check domain parsing", function() {
 		"mail.google.com", "https://mail.google.com/mail/?shva=1#inbox");
 });
 
+test("Check domain parsing of local file URLs", function() {
+	equals(sslstripwire.helpers.getDomain("file:///C:/Projects/SSLSTripWire/options.html"), 
+		null, "file:///C:/Projects/SSLSTripWire/options.html");
+});
+
 test("Check request method parsing", function() {
 	expect(2);
 	equals(sslstripwire.helpers.getMethod("http://www.google.com/"), 

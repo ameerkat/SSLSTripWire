@@ -13,6 +13,7 @@ var sslstripwire = {};
 sslstripwire.settings = {};
 sslstripwire.handlers = {};
 sslstripwire.helpers = {};
+sslstripwire.sse = {};
 
 /**
  * Settings
@@ -39,6 +40,14 @@ sslstripwire.helpers.getMethod = function(url) {
 		return "http";
 	}
 }
+
+/**
+ * SSE Integration
+ */
+sslstripwire.sse.directQuery = function(url, callback){
+	
+}
+
 
 /**
  * ============================================================================
@@ -88,7 +97,10 @@ sslstripwire.webdb.getSiteStats = function(domain_url, callback) {
 }
 
 sslstripwire.webdb.logSite = function(domain_url, success) {
-    var now = new Date();
+    if(sslstripwire.helpers.getDomain(domain_url) == null){
+		success();
+	}
+	var now = new Date();
 	var http_count = 0;
 	var https_count = 0;
 	if(sslstripwire.helpers.getMethod(domain_url) == "https")
