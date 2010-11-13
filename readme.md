@@ -8,9 +8,6 @@ websites you have visited in the past.
 <b>Under development (11/12/2010)</b>
 
 ## TODO
-* Options page
-	* Clear DB
-	* Display graphs
 * Request rewriting
 * Log <i>all</i> requests
 * Access pattern graphs
