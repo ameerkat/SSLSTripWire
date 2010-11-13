@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<script type="text/javascript">
+function clear_db(){
+	chrome.extension.getBackgroundPage().sslstripwire.webdb.cleardb();
+	count_sites();
+}
+
+function count_sites(){
+	chrome.extension.getBackgroundPage().sslstripwire.webdb.siteCount(
+	function(tx, result){
+		document.getElementById("sites-count").innerHTML = result.rows.item(0).count;
+	});
+}
+</script>
+</head>
+<body onLoad="count_sites()">
+<h2>SSLSTripWire Options</h2>
+<h4><span id="sites-count"></span> sites tracked.</h4>
+<br />
+<input type="button" value="Clear Site Database" onClick="clear_db()" />
+</body>
+</html>
