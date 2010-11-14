@@ -8,8 +8,11 @@ websites you have visited in the past.
 <b>Under development (11/12/2010)</b>
 
 ## TODO
+* Move info to popup
+* Inline scriptdoc
 * Log <i>all</i> requests
 * Access pattern graphs
+* Add some documentation
 * SSE integration
 * SSE caching
 * Request rewriting

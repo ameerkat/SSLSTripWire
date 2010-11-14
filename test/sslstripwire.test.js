@@ -33,8 +33,6 @@ module("SSLSTripWire WebDB");
 test("Clear database", function() {
 	stop(1000);
 	sslstripwire.webdb.cleardb();
-	// We kind of have to do this in a hacky way because we can't callback
-	// to within the test... May not work all the time...
 	sslstripwire.webdb.siteCount(function(tx, result){
 		equals(result.rows.item(0).count, 0, "Assert the database is empty");
 		start();
@@ -109,5 +107,15 @@ test("Database insert second new https", function() {
 				start();
 			});
 		});
+	});
+});
+
+module("SSE Integration");
+
+test("Direct querying", function() {
+	stop(3000);
+	sslstripwire.sse.directQuery("www.google.com", function(result){
+		equals(result, "no yes", "Assert the format of the returned data");
+		start();
 	});
 });

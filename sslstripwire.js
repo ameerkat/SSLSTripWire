@@ -19,6 +19,7 @@ sslstripwire.sse = {};
  * Settings
  */
 sslstripwire.settings.debug = true;
+sslstripwire.settings.sse_url = "https://www.wreferral.com/SSEService/query.do";
 
 /**
  * Helper Functions
@@ -42,10 +43,17 @@ sslstripwire.helpers.getMethod = function(url) {
 }
 
 /**
+ * ============================================================================
  * SSE Integration
+ * ============================================================================
  */
 sslstripwire.sse.directQuery = function(url, callback){
-	
+	$.ajax({
+		type: 'POST',
+		url: sslstripwire.settings.sse_url,
+		data: {'name' : url },
+		success: callback
+	});
 }
 
 
@@ -153,9 +161,6 @@ sslstripwire.webdb.siteCount = function(callback) {
  *		c. Load statistics
  */
 sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
-	// document.body.innerHTML = "<pre>Location: " + tab.url + "</pre>";
-	// document.write("<pre>Location: " + tab.url + "</pre>");
-	
 	var url = tab.url;
 	var http_count = 0;
 	var https_count = 0;
@@ -166,7 +171,7 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 			http_count = result.rows.item(0).http_count;
 			// Do Something Statistical Here
 		}
-		sslstripwire.webdb.logSite(url, null);
+		sslstripwire.webdb.logSite(url, function(){});
 	});
 }
 
@@ -211,6 +216,10 @@ function init(){
 		console.log("Running as extension");
 		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);
 		chrome.browserAction.onClicked.addListener(sslstripwire.handlers.onClick);
+		// Test out direct query
+		sslstripwire.sse.directQuery("www.google.com", function(data){
+			console.log(data);
+		});
 	} else {
 		console.log("Running as standalone page");
 	}
