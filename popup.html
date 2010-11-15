@@ -2,6 +2,15 @@
 <html>
 <head>
 <script type="text/javascript">
+/**
+ * SSLSTripWire Popup
+ * @author Ameer Ayoub <ameer.ayoub@gmail.com>
+ * @package SSLSTripWire
+ *
+ * Call to chrome API for currently selected tab (the caller) and callback
+ * with tab information, then call to sslstripwire and get back the stats from
+ * the site_db, then process info and write out to popup.
+ */
 function init(){
 	chrome.tabs.getSelected(null, function(tab){
 		var bgPage = chrome.extension.getBackgroundPage();
@@ -9,7 +18,7 @@ function init(){
 			if(result.rows.length > 0){
 				https_count = result.rows.item(0).https_count;
 				http_count = result.rows.item(0).http_count;
-				document.write("<pre>HTTP: "+http_count + "\nHTTPS: " + https_count);
+				document.write("<pre>Domain: "+bgPage.sslstripwire.helpers.getDomain(tab.url)+"\nHTTP: "+http_count + "\nHTTPS: " + https_count);
 			} else {
 				document.write("Info not available");
 			}
@@ -19,6 +28,5 @@ function init(){
 </script>
 </head>
 <body onLoad="init()">
-
 </body>
 </html>
