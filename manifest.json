@@ -4,16 +4,11 @@
   "description": "Attempts to detect and prevent SSL Strip attacks.",
   "browser_action": {
 	"default_title": "Display Page Statistics",
-    "default_icon": "images/lock.png"
+    "default_icon": "images/lock.png",
+	"default_popup": "popup.html"
   },
   "permissions": [
 	"tabs", "http://*/*", "https://*/*"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["sslstrip.content.js"]
-    }
   ],
   "background_page": "background.html",
   "options_page" : "options.html"

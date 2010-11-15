@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<script type="text/javascript">
+function init(){
+	chrome.tabs.getSelected(null, function(tab){
+		var bgPage = chrome.extension.getBackgroundPage();
+		bgPage.sslstripwire.webdb.getSiteStats(tab.url, function(tx, result){
+			if(result.rows.length > 0){
+				https_count = result.rows.item(0).https_count;
+				http_count = result.rows.item(0).http_count;
+				document.write("<pre>HTTP: "+http_count + "\nHTTPS: " + https_count);
+			} else {
+				document.write("Info not available");
+			}
+		});
+	});
+}
+</script>
+</head>
+<body onLoad="init()">
+
+</body>
+</html>
