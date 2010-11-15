@@ -105,8 +105,9 @@ sslstripwire.webdb.getSiteStats = function(domain_url, callback) {
 }
 
 sslstripwire.webdb.logSite = function(domain_url, success) {
-    if(sslstripwire.helpers.getDomain(domain_url) == null){
+    if(sslstripwire.helpers.getDomain(domain_url) === null){
 		success();
+		return;
 	}
 	var now = new Date();
 	var http_count = 0;

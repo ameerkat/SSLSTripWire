@@ -16,6 +16,11 @@ test("Check domain parsing of local file URLs", function() {
 		null, "file:///C:/Projects/SSLSTripWire/options.html");
 });
 
+test("Check domain parsing of chrome extension URLs", function() {
+	equals(sslstripwire.helpers.getDomain("chrome-extensions://macgcabblngjoaldglhabgpjclljoig/options.html"), 
+		null, "chrome-extensions://macgcabblngjoaldglhabgpjclljoig/options.html");
+});
+
 test("Check request method parsing", function() {
 	expect(2);
 	equals(sslstripwire.helpers.getMethod("http://www.google.com/"), 

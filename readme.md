@@ -9,6 +9,7 @@ websites you have visited in the past.
 
 ## TODO
 * Move info to popup
+	* Get info via message passing
 * Inline scriptdoc
 * Log <i>all</i> requests
 * Access pattern graphs
