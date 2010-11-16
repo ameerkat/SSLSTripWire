@@ -97,43 +97,56 @@ sslstripwire.sse.directQuery = function(url, callback){
  */
 sslstripwire.sse.query = function(url, callback){
 	var now = new Date();
-	var expires_update = new Date(now.getTime()+sslstripwire.sse_cache);
+	var expires_update = new Date(now.getTime() + sslstripwire.settings.sse_cache);
 	sslstripwire.webdb.db.transaction(function(tx) {
     tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
 		[sslstripwire.helpers.getDomain(url)],
 		function(tx, result){
 			if(result.rows.length > 0){
 				var expires = new Date(result.rows.item(0).expires);
-				console.log(result.rows.item(0).expires);
 				// If not expired just return result
 				if(now.getTime() < expires.getTime()){
 					callback(tx, result);
 				} else {
+				if(sslstripwire.settings.debug){
+					console.log("UPDATING record for domain ("+url+") "+ sslstripwire.helpers.getDomain(url));
+				}
 				// If expired then perform update and return result
 					sslstripwire.sse.directQuery(url, function(data){
-						tx.executeSql('UPDATE sse_cache SET https_support = ?, phising_site = ?, expires = ? WHERE ID = ?', 
-						[data.split(" ")[0], data.split(" ")[1], expires_update, result.rows.item(0).ID],
-						function(){
-							tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
-							[sslstripwire.helpers.getDomain(url)],
-							callback,
+						sslstripwire.webdb.db.transaction(function(tx) {
+							tx.executeSql('UPDATE sse_cache SET https_support = ?, phishing_site = ?, expires = ? WHERE ID = ?', 
+							[data.split(" ")[0], data.split(" ")[1], expires_update, result.rows.item(0).ID],
+							function(){
+								sslstripwire.webdb.db.transaction(function(tx) {
+									tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
+									[sslstripwire.helpers.getDomain(url)],
+									callback,
+									sslstripwire.webdb.onError);
+								});
+							},
 							sslstripwire.webdb.onError);
-						},
-						sslstripwire.webdb.onError)
+						});
 					});
 				}
 			} else {
 				// Do direct query and insert into database and return record
 				sslstripwire.sse.directQuery(url, function(data){
-					tx.executeSql('INSERT INTO sse_cache(domain_url, https_support, phishing_site, expires) VALUES ?, ?, ?, ?'), 
-					[sslstripwire.helpers.getDomain(url), data.split(" ")[0], data.split(" ")[1], expires_update],
-					function(){
-							tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
-							[sslstripwire.helpers.getDomain(url)],
-							callback,
-							sslstripwire.webdb.onError);
-					},
-					sslstripwire.webdb.onError)
+					sslstripwire.webdb.db.transaction(function(tx) {
+						if(sslstripwire.settings.debug){
+							console.log("CREATING record for domain ("+url+") "+ sslstripwire.helpers.getDomain(url));
+						}
+						tx.executeSql('INSERT INTO sse_cache(domain_url, https_support, phishing_site, expires) VALUES (?, ?, ?, ?)', 
+						[sslstripwire.helpers.getDomain(url), data.split(" ")[0], data.split(" ")[1], expires_update],
+						function(){
+							sslstripwire.webdb.db.transaction(function(tx) {
+								tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
+								[sslstripwire.helpers.getDomain(url)],
+								callback,
+								sslstripwire.webdb.onError);
+							});
+						},
+						sslstripwire.webdb.onError);
+					});
 				});
 			}
 		}, sslstripwire.webdb.onError);
@@ -174,7 +187,7 @@ sslstripwire.webdb.createTable = function() {
             'domain_overview(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_count INT, http_count INT, last_visited DATETIME)', []);
 		// SSE Cache
 		tx.executeSql('CREATE TABLE IF NOT EXISTS ' + 
-            'sse_cache(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_support INT, phishing_site INT, expires DATETIME)', []);
+            'sse_cache(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_support TEXT, phishing_site TEXT, expires DATETIME)', []);
 		// Site History Log (for analysis)
 		// Mode : 0 = HTTP, 1 = HTTPS
 		// Stored for convenience, we could always calculate it from url
@@ -360,17 +373,23 @@ function init(){
 	// If it's an extension
 	console.log("Determinig context of execution");
 	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){
-		console.log("Running as extension");
+		console.log("Running as extension.");
 		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);
 		// Test out direct query for debugging purposes
 		// Doesn't run in test script because of XSS prevention but runs in
 		// our background script.
-		sslstripwire.sse.directQuery("www.google.com", function(data){
+		sslstripwire.sse.directQuery("http://www.google.com/", function(data){
 			console.log(data);
 		});
 		// Test out SSE caching
-		
+		sslstripwire.sse.query("http://www.google.com/", function(tx, result){
+			console.log("HTTP SUPPORT: "+result.rows.item(0).https_support);
+		});
+		// Second Query
+		sslstripwire.sse.query("http://www.google.com/", function(tx, result){
+			console.log("HTTP SUPPORT: "+result.rows.item(0).https_support);
+		});
 	} else {
-		console.log("Running as standalone page");
+		console.log("Running as standalone page.");
 	}
 }

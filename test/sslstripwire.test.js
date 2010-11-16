@@ -114,13 +114,3 @@ test("Database insert second new https", function() {
 		});
 	});
 });
-
-module("SSE Integration");
-
-test("Direct querying", function() {
-	stop(3000);
-	sslstripwire.sse.directQuery("www.google.com", function(result){
-		equals(result, "no yes", "Assert the format of the returned data");
-		start();
-	});
-});
