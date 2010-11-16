@@ -8,7 +8,7 @@ websites you have visited in the past.
 <b>Under development (11/16/2010)</b>
 
 ## Screenshots
-!
+![Sample Popup Info](https://github.com/ameerkat/SSLSTripWire/raw/master/images/readme-popup-demo.jpg)
 
 ## TODO
 * Add some documentation
