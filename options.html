@@ -3,8 +3,11 @@
 <head>
 <script type="text/javascript">
 function clear_db(){
-	chrome.extension.getBackgroundPage().sslstripwire.webdb.cleardb();
-	count_sites();
+	var are_you_sure = confirm("Are you sure you want to clear the database? All data will be removed.");
+	if(are_you_sure){
+		chrome.extension.getBackgroundPage().sslstripwire.webdb.cleardb();
+		count_sites();
+	}
 }
 
 function count_sites(){
@@ -12,13 +15,31 @@ function count_sites(){
 	function(tx, result){
 		document.getElementById("sites-count").innerHTML = result.rows.item(0).count;
 	});
+	chrome.extension.getBackgroundPage().sslstripwire.log.count(
+	function(tx, result){
+		document.getElementById("log-count").innerHTML = result.rows.item(0).count;
+	});
 }
 </script>
 </head>
-<body onLoad="count_sites()">
-<h2>SSLSTripWire Options</h2>
-<h4><span id="sites-count"></span> sites tracked.</h4>
-<br />
-<input type="button" value="Clear Site Database" onClick="clear_db()" />
+<body onLoad="count_sites()" style="/*background-image: url('images/page-background.jpg');*/background-color: #272822;">
+<div id="container" style="width: 600px; margin: 0px auto; background-color: #FFFFFF; padding: 30px; border-radius: 15px; opacity: .9;">
+	<img src="images/lock.png" />
+	<h2 style="display: inline;">SSLSTripWire</h2>
+	<div id="stat-container" style="float: right;">
+		<h4 style="color: #969696; display: inline;"><span id="sites-count" style="font-weight: bold;"></span> domains tracked.</h4><br />
+		<h4 style="color: #969696; display: inline;"><span id="log-count" style="font-weight: bold;"></span> log entries.</h4>
+	</div>
+	<br /><br />
+	<form name="options">
+		<input type="checkbox" name="sse_enabled" checked />Enable SSE Integration<br />
+		<input type="checkbox" name="graph_enabled" checked />Enable Access Pattern Graph<br />
+		SSE Cache Length: <input type="text" name="sse_cache" /><br />
+		<input type="button" value="Save" /><br /><br />
+		<div style="text-align: right;" id="clear-button-container">
+			<input type="button" value="Clear Site Database" onClick="clear_db()" />
+		</div>
+	</form>
+</div>
 </body>
 </html>

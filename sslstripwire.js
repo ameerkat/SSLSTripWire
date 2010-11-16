@@ -175,6 +175,8 @@ sslstripwire.log = {};
  * @param string url URL of the site to log
  */
 sslstripwire.log.write = function(url){
+    if(sslstripwire.helpers.getDomain(url) === null)
+		return;
 	var now = new Date();
 	sslstripwire.webdb.db.transaction(function(tx) {
 		tx.executeSql('INSERT INTO log(full_url, domain_url, mode, visited) VALUES (?, ?, ?, ?)', 
@@ -209,6 +211,17 @@ sslstripwire.log.getLimited = function(url, limit, callback){
 		[sslstripwire.helpers.getDomain(url), limit],
 		callback, sslstripwire.webdb.onError);
   });
+}
+
+/**
+ * Counts the number of log entries in the log database.
+ * @param function callback function to callback with the result set
+ */
+sslstripwire.log.count = function(callback) {
+	sslstripwire.webdb.db.transaction(function(tx) {
+		tx.executeSql('SELECT COUNT(*) as count FROM log', [], 
+		callback, sslstripwire.webdb.onError);
+	});
 }
 
 /**
@@ -341,6 +354,12 @@ sslstripwire.webdb.logSite = function(domain_url, success) {
 sslstripwire.webdb.cleardb = function() {
 	sslstripwire.webdb.db.transaction(function(tx) {
 		tx.executeSql('DELETE FROM domain_overview', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
+	});
+	sslstripwire.webdb.db.transaction(function(tx) {
+		tx.executeSql('DELETE FROM log', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
+	});
+	sslstripwire.webdb.db.transaction(function(tx) {
+		tx.executeSql('DELETE FROM sse_cache', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
 	});
 }
 

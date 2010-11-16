@@ -12,7 +12,6 @@ attacks.
 ![Sample Popup Info](https://github.com/ameerkat/SSLSTripWire/raw/master/images/readme-popup-demo.jpg)
 
 ## TODO
-* Add some documentation
 * Request rewriting
 * Improved heuristics
 * ?Detailed domain overview page
@@ -20,3 +19,4 @@ attacks.
 * SSE integration options
 * Save/Load options to local storage
 * Classifier for access patterns
+* Add some documentation

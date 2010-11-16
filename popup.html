@@ -26,7 +26,7 @@ function init(){
 					document.write("\n<b>SSE Info</b>\nHTTPS:\t\t"+result.rows.item(0).https_support+"\nPhishing:\t"+result.rows.item(0).phishing_site+"</pre>");
 				});
 			} else {
-				document.write("Info not available");
+				document.write("<pre>Info not available</pre>");
 			}
 		});
 		
@@ -38,15 +38,15 @@ function init(){
 			var point_string = "";
 			var color = "00FF00";
 			var len = result.rows.length, i;
-			for (i = 0; i < len; i++) {
+			for (i = len-1; i >= 0; i--) {
 				if(result.rows.item(i).mode == "http")
 					color = "FF0000";
-				if(i != 0)
+				if(i != len-1)
 					point_string += "|";
 				point_string += "o,"+color+",0,"+i+",15";
 			}
 			if(point_string != "")
-				document.write("\n<b>Access Pattern</b>\n<img src=\"http://chart.apis.google.com/chart?chf=c,s,FFFFFF&chxr=0,0,10|1,0,2&chxs=1,FFFFFF,11.5,0,l,FFFFFF&chxt=x,y&chs=200x80&cht=ls&chco=969696&chd=s:ffffffffff&chg=20,25&chls=1,-1,-1&chm="+point_string+"\" />");
+				document.write("\n<b>Access Pattern</b>\n<img src=\"http://chart.apis.google.com/chart?chf=c,s,FFFFFF&chxr=0,0,10|1,0,2&chxs=1,FFFFFF,11.5,0,l,FFFFFF&chxt=x,y&chs=200x80&cht=ls&chco=969696&chd=s:ffffffffff&chls=1,-1,-1&chm="+point_string+"\" />");
 		});
 	});
 }
