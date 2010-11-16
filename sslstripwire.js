@@ -22,12 +22,34 @@ sslstripwire.settings = {};
 
 // Whether or not to print debug info (not enforced strictly in the program)
 sslstripwire.settings.debug = true;
+sslstripwire.settings.sse_enabled = true;
 // URL to the SSE service
 sslstripwire.settings.sse_url = "https://www.wreferral.com/SSEService/query.do";
 // SSE cache timeout
 sslstripwire.settings.sse_cache = 1000*60*60*24*7; // one week
 // Display access pattern graph
 sslstripwire.settings.display_graph = true;
+
+/**
+ * Loads all the settings from local storage settable in the options page
+ */
+sslstripwire.settings.load = function(){
+	// TODO rewrite this as a loop
+	if(!localStorage.settings){
+		localStorage.settings = JSON.stringify(sslstripwire.settings);
+	}
+	var settings = JSON.parse(localStorage.settings);
+	if(typeof(settings.debug) != "undefined" && settings.debug != null)
+	var settings = JSON.parse(localStorage.settings);
+	if(typeof(settings.sse_enabled) != "undefined" && settings.sse_enabled != null)
+		sslstripwire.settings.sse_enabled = settings.sse_enabled;
+	if(typeof(settings.sse_url) != "undefined" && settings.sse_url != null)
+		sslstripwire.settings.sse_url = settings.sse_url;
+	if(typeof(settings.sse_cache) != "undefined" && settings.sse_cache != null)
+		sslstripwire.settings.sse_cache = settings.sse_cache;
+	if(typeof(settings.display_graph) != "undefined" && settings.display_graph != null)
+		sslstripwire.settings.display_graph = settings.display_graph;
+}
 
 /**
  * ============================================================================
@@ -446,9 +468,10 @@ sslstripwire.handlers.onClick = function(tab) {
 function init(){
 	sslstripwire.webdb.open();
 	sslstripwire.webdb.createTable();
+	sslstripwire.settings.load();
 	
 	// If it's an extension
-	console.log("Determinig context of execution");
+	console.log("Determining context of execution");
 	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){
 		console.log("Running as extension.");
 		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);

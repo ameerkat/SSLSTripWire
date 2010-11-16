@@ -22,9 +22,11 @@ function init(){
 				https_count = result.rows.item(0).https_count;
 				http_count = result.rows.item(0).http_count;
 				document.write("<pre><b>Overview</b>\nDomain:\t"+bgPage.sslstripwire.helpers.getDomain(tab.url)+"\nHTTP:\t"+http_count + "\nHTTPS:\t" + https_count + "\n");
-				bgPage.sslstripwire.sse.query(tab.url, function(tx, result){
-					document.write("\n<b>SSE Info</b>\nHTTPS:\t\t"+result.rows.item(0).https_support+"\nPhishing:\t"+result.rows.item(0).phishing_site+"</pre>");
-				});
+				if(bgPage.sslstripwire.settings.sse_enabled){
+					bgPage.sslstripwire.sse.query(tab.url, function(tx, result){
+						document.write("\n<b>SSE Info</b>\nHTTPS:\t\t"+result.rows.item(0).https_support+"\nPhishing:\t"+result.rows.item(0).phishing_site+"</pre>");
+					});
+				}
 			} else {
 				document.write("<pre>Info not available</pre>");
 			}
@@ -34,20 +36,22 @@ function init(){
 		 * Google Graph API Graph
 		 * Displays the access pattern as markers on a graph
 		 */
-		bgPage.sslstripwire.log.getLimited(tab.url, 10, function(tx, result){
-			var point_string = "";
-			var color = "00FF00";
-			var len = result.rows.length, i;
-			for (i = len-1; i >= 0; i--) {
-				if(result.rows.item(i).mode == "http")
-					color = "FF0000";
-				if(i != len-1)
-					point_string += "|";
-				point_string += "o,"+color+",0,"+i+",15";
-			}
-			if(point_string != "")
-				document.write("\n<b>Access Pattern</b>\n<img src=\"http://chart.apis.google.com/chart?chf=c,s,FFFFFF&chxr=0,0,10|1,0,2&chxs=1,FFFFFF,11.5,0,l,FFFFFF&chxt=x,y&chs=200x80&cht=ls&chco=969696&chd=s:ffffffffff&chls=1,-1,-1&chm="+point_string+"\" />");
-		});
+		if(bgPage.sslstripwire.settings.display_graph){
+			bgPage.sslstripwire.log.getLimited(tab.url, 10, function(tx, result){
+				var point_string = "";
+				var color = "00FF00";
+				var len = result.rows.length, i;
+				for (i = len-1; i >= 0; i--) {
+					if(result.rows.item(i).mode == "http")
+						color = "FF0000";
+					if(i != len-1)
+						point_string += "|";
+					point_string += "o,"+color+",0,"+i+",15";
+				}
+				if(point_string != "")
+					document.write("\n<b>Access Pattern</b>\n<img src=\"http://chart.apis.google.com/chart?chf=c,s,FFFFFF&chxr=0,0,10|1,0,2&chxs=1,FFFFFF,11.5,0,l,FFFFFF&chxt=x,y&chs=200x80&cht=ls&chco=969696&chd=s:ffffffffff&chls=1,-1,-1&chm="+point_string+"\" />");
+			});
+		}
 	});
 }
 </script>

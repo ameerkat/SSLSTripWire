@@ -19,23 +19,67 @@ function count_sites(){
 	function(tx, result){
 		document.getElementById("log-count").innerHTML = result.rows.item(0).count;
 	});
+	chrome.extension.getBackgroundPage().sslstripwire.webdb.count("sse_cache", 
+	function(tx, result){
+		document.getElementById("sse-count").innerHTML = result.rows.item(0).count;
+	});
+}
+
+// TODO rewrite these in a generic way
+function save(){
+	var settings = JSON.parse(localStorage.settings);
+	settings.sse_enabled = document.getElementById("sse_enabled").checked;
+	settings.display_graph = document.getElementById("display_graph").checked;
+	settings.sse_cache = document.getElementById("sse_cache").value;
+	settings.sse_url = document.getElementById("sse_url").value;
+	settings.debug = document.getElementById("debug").checked;
+	localStorage.settings = JSON.stringify(settings);
+	bgPage = chrome.extension.getBackgroundPage().sslstripwire.settings.load();
+	alert('Settings Saved');
+}
+
+function load(){
+	var bgPage = chrome.extension.getBackgroundPage();
+	var settings = JSON.parse(localStorage.settings);
+	document.getElementById("sse_enabled").checked = 
+		(typeof(settings.sse_enabled) == 'undefined')?bgPage.sslstripwire.settings.sse_enabled:settings.sse_enabled;
+	document.getElementById("display_graph").checked = 
+		(typeof(settings.display_graph) == 'undefined')?bgPage.sslstripwire.settings.display_graph:settings.display_graph;
+	document.getElementById("sse_cache").value = 
+		(typeof(settings.sse_cache) == 'undefined')?bgPage.sslstripwire.settings.sse_cache:settings.sse_cache;
+	document.getElementById("debug").checked = 
+		(typeof(settings.debug) == 'undefined')?bgPage.sslstripwire.settings.debug:settings.debug;
+	document.getElementById("sse_url").value = 
+		(typeof(settings.sse_url) == 'sse_url')?bgPage.sslstripwire.settings.sse_url:settings.sse_url;
+	count_sites();
 }
 </script>
 </head>
-<body onLoad="count_sites()" style="/*background-image: url('images/page-background.jpg');*/background-color: #272822;">
-<div id="container" style="width: 600px; margin: 0px auto; background-color: #FFFFFF; padding: 30px; border-radius: 15px; opacity: .9;">
+<body onLoad="load();" style="/*background-image: url('images/page-background.jpg');*/background-color: #272822;">
+<div id="container" style="width: 600px; margin: 0px auto; background-color: #FFFFFF; padding: 30px; border-radius: 15px; opacity: 1;">
 	<img src="images/lock.png" />
 	<h2 style="display: inline;">SSLSTripWire</h2>
 	<div id="stat-container" style="float: right;">
 		<h4 style="color: #969696; display: inline;"><span id="sites-count" style="font-weight: bold;"></span> domains tracked.</h4><br />
-		<h4 style="color: #969696; display: inline;"><span id="log-count" style="font-weight: bold;"></span> log entries.</h4>
+		<h4 style="color: #969696; display: inline;"><span id="log-count" style="font-weight: bold;"></span> log entries.</h4><br />
+		<h4 style="color: #969696; display: inline;"><span id="sse-count" style="font-weight: bold;"></span> sse queries cached.</h4>
 	</div>
 	<br /><br />
 	<form name="options">
-		<input type="checkbox" name="sse_enabled" checked />Enable SSE Integration<br />
-		<input type="checkbox" name="graph_enabled" checked />Enable Access Pattern Graph<br />
-		SSE Cache Length: <input type="text" name="sse_cache" /><br />
-		<input type="button" value="Save" /><br /><br />
+		<input type="checkbox" name="sse_enabled" id="sse_enabled" checked />Enable SSE Integration<br />
+		<input type="checkbox" name="display_graph" id="display_graph" checked />Enable Access Pattern Graph<br />
+		<input type="checkbox" name="debug" id="debug" checked />Display Debug Information to Console<br />
+		<table>
+			<tr>
+				<td>SSE Cache Length:</td>
+				<td><input type="text" name="sse_cache" id="sse_cache" /></td>
+			</tr>
+			<tr>
+				<td>SSE URL:</td>
+				<td><input type="text" name="sse_url" id="sse_url" size="40" /></td>
+			</tr>
+		</table>
+		<input type="button" value="Save" onClick="save()" /><br /><br />
 		<div style="text-align: right;" id="clear-button-container">
 			<input type="button" value="Clear Site Database" onClick="clear_db()" />
 		</div>
