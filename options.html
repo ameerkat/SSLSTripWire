@@ -54,6 +54,15 @@ function load(){
 	count_sites();
 }
 </script>
+<style type="text/css">
+	a {
+		color: #272822;
+		text-decoration: none;
+	}
+	a:hover {
+		color: #969696;
+	}
+</style>
 </head>
 <body onLoad="load();" style="/*background-image: url('images/page-background.jpg');*/background-color: #272822;">
 <div id="container" style="width: 600px; margin: 0px auto; background-color: #FFFFFF; padding: 30px; border-radius: 15px; opacity: 1;">
@@ -81,8 +90,10 @@ function load(){
 		</table>
 		<input type="button" value="Save" onClick="save()" /><br /><br />
 		<div style="text-align: right;" id="clear-button-container">
-			<input type="button" value="Clear Site Database" onClick="clear_db()" />
+			<a href="#" onClick="clear_db()"><img src="images/database_delete.png" style="margin-right: 5px; position: relative; top: 2px;" />Clear Site Database</a><br />
+			<a href="test/index.html"><img src="images/wrench.png" style="margin-right: 5px; position: relative; top: 2px;" />Run Unit Tests *</a>
 		</div>
+		<span style="font-size: 8pt;">* (11/16/2010) Will erase the database as we can not switch to dev database.</span>
 	</form>
 </div>
 </body>

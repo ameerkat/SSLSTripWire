@@ -265,6 +265,16 @@ sslstripwire.webdb.open = function() {
 }
 
 /**
+ * Switches to test db
+ * This doesn't work for some reason I speculate it is because we can only
+ * have one database open at a time.
+ */
+sslstripwire.webdb.switchTo = function(db_name){
+	var dbSize = 32 * 1024 * 1024; // 32MB
+	sslstripwire.webdb.db = openDatabase(db_name, '0.2', 'SSLStripWire Site Database (Dev)', dbSize);
+}
+
+/**
  * Create all the database tables if they don't exist.
  * Database tables:
  * 		domain_overview (contains general statistics about a given domain, such

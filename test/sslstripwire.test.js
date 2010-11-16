@@ -4,6 +4,11 @@
  * @author Ameer Ayoub <ameer.ayoub@gmail.com>
  */
 
+// Switch to dev database
+// Doesn't work, for now testing will erase database
+/*sslstripwire.webdb.switchTo("site_db_dev");
+sslstripwire.webdb.createTable();*/
+
 /**
  * Helpers
  */
@@ -128,3 +133,15 @@ test("Database insert second new https", function() {
 		});
 	});
 });
+
+test("Clear database with content", function() {
+	stop(1000);
+	sslstripwire.webdb.cleardb();
+	sslstripwire.webdb.count("domain_overview", function(tx, result){
+		equals(result.rows.item(0).count, 0, "Assert the database is empty");
+		start();
+	});
+});
+
+// Switch back to production
+//sslstripwire.webdb.open();
