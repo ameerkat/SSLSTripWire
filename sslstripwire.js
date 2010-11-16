@@ -89,6 +89,17 @@ sslstripwire.helpers.getMethod = function(url) {
 }
 
 /**
+ * Returns the url rewritten to https
+ * @param string url the string of the url to rewrie
+ * @return the url rewritten to https
+ */
+sslstripwire.helpers.rewrite = function(url) {
+	if(sslstripwire.helpers.getMethod(url) == "https")
+		return url;
+	return "https"+url.substring(4);
+}
+
+/**
  * ============================================================================
  * SSE Integration
  * DB Schema:
@@ -417,7 +428,23 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 		if(result.rows.length > 0){
 			https_count = result.rows.item(0).https_count;
 			http_count = result.rows.item(0).http_count;
-			// Do Something Statistical Here
+			// Simple detection here
+			sslstripwire.sse.query(url, function(tx, result){
+				if(result.rows.length > 0){
+					if(sslstripwire.settings.sse_enabled && result.rows.item(0).https_support){
+						// Do rewrite to HTTPS
+					}
+				} else {
+					if(https_count > 0){
+						// Enforce rewrite
+						// TODO hook onto form post instead of all requests
+					} else {
+						// Do nothing
+					}
+				}
+			});
+		} else {
+			// No records then just use SSE if enabled
 		}
 		sslstripwire.webdb.logSite(url, function(){});
 	});
@@ -446,15 +473,6 @@ sslstripwire.handlers.onClick = function(tab) {
 			function(response){console.log(response);});
 	});
 }
-
-// 2. Post statistics to the popup plugin
-
-// 3. If > 50% is HTTPS and this request is HTTP, then change icon and 
-// send alert
-
-// 4. Do Secure Search Engine Query, if in DB then force SSL if we want
-
-// 5. Insert this instance into database
 
 /**
  * ============================================================================

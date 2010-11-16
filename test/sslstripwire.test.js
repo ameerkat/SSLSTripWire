@@ -17,6 +17,14 @@ test("Check domain parsing", function() {
 		"mail.google.com", "https://mail.google.com/mail/?shva=1#inbox");
 });
 
+test("Check url rewriting", function() {
+	expect(2);
+	equals(sslstripwire.helpers.rewrite("http://www.google.com/"), 
+		"https://www.google.com/", "http://www.google.com/");
+	equals(sslstripwire.helpers.rewrite("https://mail.google.com/mail/?shva=1#inbox"), 
+		"https://mail.google.com/mail/?shva=1#inbox", "https://mail.google.com/mail/?shva=1#inbox");
+});
+
 test("Check domain parsing of local file URLs", function() {
 	equals(sslstripwire.helpers.getDomain("file:///C:/Projects/SSLSTripWire/options.html"), 
 		null, "file:///C:/Projects/SSLSTripWire/options.html");
