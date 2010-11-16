@@ -23,7 +23,7 @@ sslstripwire.sse = {};
  */
 sslstripwire.settings.debug = true;
 sslstripwire.settings.sse_url = "https://www.wreferral.com/SSEService/query.do";
-sslstripwire.settings.sse_cache = 60*60*24*7; // one week
+sslstripwire.settings.sse_cache = 1000*60*60*24*7; // one week
 
 /**
  * ============================================================================
@@ -81,27 +81,63 @@ sslstripwire.sse.directQuery = function(url, callback){
 	$.ajax({
 		type: 'POST',
 		url: sslstripwire.settings.sse_url,
-		data: {'name' : url },
+		data: {'name' : sslstripwire.helpers.getDomain(url) },
 		success: callback
 	});
 }
 
 /**
  * Queries for a domain in the SSE, either directly or searches through the
- * cache if available.
+ * cache if available. 0 value for caching indicates that the request will be
+ * new each time. The cache length is set directly through the 
+ * sslstripwire.settings.sse_cache variable, and is made available to the user
+ * through the options page.
  * @param string url URL of the domain to query
  * @param function callback function to callback to with the result
  */
 sslstripwire.sse.query = function(url, callback){
+	var now = new Date();
+	var expires_update = new Date(now.getTime()+sslstripwire.sse_cache);
 	sslstripwire.webdb.db.transaction(function(tx) {
     tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
 		[sslstripwire.helpers.getDomain(url)],
 		function(tx, result){
-		
+			if(result.rows.length > 0){
+				var expires = new Date(result.rows.item(0).expires);
+				console.log(result.rows.item(0).expires);
+				// If not expired just return result
+				if(now.getTime() < expires.getTime()){
+					callback(tx, result);
+				} else {
+				// If expired then perform update and return result
+					sslstripwire.sse.directQuery(url, function(data){
+						tx.executeSql('UPDATE sse_cache SET https_support = ?, phising_site = ?, expires = ? WHERE ID = ?', 
+						[data.split(" ")[0], data.split(" ")[1], expires_update, result.rows.item(0).ID],
+						function(){
+							tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
+							[sslstripwire.helpers.getDomain(url)],
+							callback,
+							sslstripwire.webdb.onError);
+						},
+						sslstripwire.webdb.onError)
+					});
+				}
+			} else {
+				// Do direct query and insert into database and return record
+				sslstripwire.sse.directQuery(url, function(data){
+					tx.executeSql('INSERT INTO sse_cache(domain_url, https_support, phishing_site, expires) VALUES ?, ?, ?, ?'), 
+					[sslstripwire.helpers.getDomain(url), data.split(" ")[0], data.split(" ")[1], expires_update],
+					function(){
+							tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
+							[sslstripwire.helpers.getDomain(url)],
+							callback,
+							sslstripwire.webdb.onError);
+					},
+					sslstripwire.webdb.onError)
+				});
+			}
 		}, sslstripwire.webdb.onError);
 	});
-	// 2. If in db then return result
-	// 3. If not then directy query and then return result
 }
 
 /**
@@ -332,6 +368,8 @@ function init(){
 		sslstripwire.sse.directQuery("www.google.com", function(data){
 			console.log(data);
 		});
+		// Test out SSE caching
+		
 	} else {
 		console.log("Running as standalone page");
 	}
