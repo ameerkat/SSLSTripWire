@@ -1,4 +1,10 @@
 /**
+ * SSLSTripWire Test Suite
+ * SSE Integration is not included because it requires cross site requesting.
+ * @author Ameer Ayoub <ameer.ayoub@gmail.com>
+ */
+
+/**
  * Helpers
  */
 module("SSLSTripWire Helpers");

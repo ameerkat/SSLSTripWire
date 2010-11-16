@@ -6,30 +6,35 @@
  * websites you have visited in the past.
  * @author Ameer Ayoub <ameer.ayoub@gmail.com>
  * @package SSLSTripWire
- * @version 1.0.3
- * @modified 2010-11-15
+ * @version 1.0.4
+ * @modified 2010-11-16
  */
 
+// Main extension namespace
 var sslstripwire = {};
-sslstripwire.settings = {};
-sslstripwire.handlers = {};
-sslstripwire.helpers = {};
-sslstripwire.sse = {};
 
 /**
  * ============================================================================
  * Settings
  * ============================================================================
  */
+sslstripwire.settings = {};
+
+// Whether or not to print debug info (not enforced strictly in the program)
 sslstripwire.settings.debug = true;
+// URL to the SSE service
 sslstripwire.settings.sse_url = "https://www.wreferral.com/SSEService/query.do";
+// SSE cache timeout
 sslstripwire.settings.sse_cache = 1000*60*60*24*7; // one week
+// Display access pattern graph
+sslstripwire.settings.display_graph = true;
 
 /**
  * ============================================================================
  * Helper Functions
  * ============================================================================
  */
+sslstripwire.helpers = {};
 
 /**
  * Convenience function to parse the domain out of a URL (via regex).
@@ -69,6 +74,7 @@ sslstripwire.helpers.getMethod = function(url) {
  * phishing_site INT, expires DATETIME)
  * ============================================================================
  */
+sslstripwire.sse = {};
 
 /**
  * directQuery does a query against the secure search engine (wreferral) via
@@ -155,6 +161,46 @@ sslstripwire.sse.query = function(url, callback){
 
 /**
  * ============================================================================
+ * Site Log
+ * Holds every site request for analysis.
+ * DB Schema:
+ * log(ID INTEGER PRIMARY KEY ASC, full_url TEXT, domain_url TEXT, mode TEXT,
+ *  visited DATETIME)
+ * ============================================================================
+ */
+sslstripwire.log = {};
+
+/**
+ * Writes site with given url to the log file.
+ * @param string url URL of the site to log
+ */
+sslstripwire.log.write = function(url){
+	var now = new Date();
+	sslstripwire.webdb.db.transaction(function(tx) {
+		tx.executeSql('INSERT INTO log(full_url, domain_url, mode, visited) VALUES (?, ?, ?, ?)', 
+		[url, sslstripwire.helpers.getDomain(url), sslstripwire.helpers.getMethod(url), now],
+		sslstripwire.webdb.onSuccess,
+		sslstripwire.webdb.onError);
+	});
+}
+
+/**
+ * Gives the result set back to the callback with all the log entries on the
+ * provided domain.
+ * @param string url the url of the domain to recover log entries for
+ * @param function(tx, result) callback function to take the results on 
+ *		successful query
+ */
+sslstripwire.log.get = function(url, callback){
+  sslstripwire.webdb.db.transaction(function(tx) {
+    tx.executeSql('SELECT * FROM log WHERE domain_url = ?',
+		[sslstripwire.helpers.getDomain(url)],
+		callback, sslstripwire.webdb.onError);
+  });
+}
+
+/**
+ * ============================================================================
  * Site Database
  * Holds the summary view of each domain.
  * ============================================================================
@@ -193,7 +239,7 @@ sslstripwire.webdb.createTable = function() {
 		// Stored for convenience, we could always calculate it from url
 		// same with domain_url (so we can join tables without calculating each time)
 		tx.executeSql('CREATE TABLE IF NOT EXISTS ' + 
-			'log(ID INTEGER PRIMARY KEY ASC, full_url TEXT, domain_url TEXT, mode INT, visited DATETIME)', []);
+			'log(ID INTEGER PRIMARY KEY ASC, full_url TEXT, domain_url TEXT, mode TEXT, visited DATETIME)', []);
 	});
 }
 
@@ -304,7 +350,8 @@ sslstripwire.webdb.siteCount = function(callback) {
  * Main Program
  * ============================================================================
  */
-
+sslstripwire.handlers = {};
+ 
 /* 1. On a page request check if page is stored before and get statistics
  * 		a. Add Navigation Handler to fire on request
  *		b. Search local database for the site domain
@@ -314,6 +361,8 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 	var url = tab.url;
 	var http_count = 0;
 	var https_count = 0;
+	
+	sslstripwire.log.write(url);
 	
 	sslstripwire.webdb.getSiteStats(url, function(tx, result){
 		if(result.rows.length > 0){
@@ -370,6 +419,7 @@ sslstripwire.handlers.onClick = function(tab) {
 function init(){
 	sslstripwire.webdb.open();
 	sslstripwire.webdb.createTable();
+	
 	// If it's an extension
 	console.log("Determinig context of execution");
 	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){

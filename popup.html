@@ -18,7 +18,10 @@ function init(){
 			if(result.rows.length > 0){
 				https_count = result.rows.item(0).https_count;
 				http_count = result.rows.item(0).http_count;
-				document.write("<pre>Domain: "+bgPage.sslstripwire.helpers.getDomain(tab.url)+"\nHTTP: "+http_count + "\nHTTPS: " + https_count);
+				document.write("<pre>Domain: "+bgPage.sslstripwire.helpers.getDomain(tab.url)+"\nHTTP: "+http_count + "\nHTTPS: " + https_count + "\n");
+				bgPage.sslstripwire.sse.query(tab.url, function(tx, result){
+					document.write("\n<b>SSE Info:</b>\nHTTPS: "+result.rows.item(0).https_support+"\nPhishing Site: "+result.rows.item(0).phishing_site+"</pre>");
+				});
 			} else {
 				document.write("Info not available");
 			}

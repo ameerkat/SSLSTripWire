@@ -12,6 +12,5 @@ websites you have visited in the past.
 * Access pattern graphs
 * Add some documentation
 * SSE integration
-* SSE caching
 * Request rewriting
 * Improved heuristics
