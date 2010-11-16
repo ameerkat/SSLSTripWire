@@ -44,7 +44,7 @@ module("SSLSTripWire WebDB");
 test("Clear database", function() {
 	stop(1000);
 	sslstripwire.webdb.cleardb();
-	sslstripwire.webdb.siteCount(function(tx, result){
+	sslstripwire.webdb.count("domain_overview", function(tx, result){
 		equals(result.rows.item(0).count, 0, "Assert the database is empty");
 		start();
 	});
@@ -65,7 +65,7 @@ test("Database insert new", function() {
 	var site_url = "http://www.google.com/";
 	stop(1000);
 	sslstripwire.webdb.logSite(site_url, function(){
-		sslstripwire.webdb.siteCount(function(tx, result){
+		sslstripwire.webdb.count("domain_overview", function(tx, result){
 			equals(result.rows.item(0).count, 1, "Assert the database is not empty");
 			sslstripwire.webdb.getSiteStats(site_url, function(tx, result) {
 				equals(result.rows.item(0).http_count, 1, "Assert HTTP count is 1");
@@ -80,7 +80,7 @@ test("Database update old", function() {
 	stop(1000);
 	var site_url = "http://www.google.com/";
 	sslstripwire.webdb.logSite(site_url, function(){
-	sslstripwire.webdb.siteCount(function(tx, result){
+	sslstripwire.webdb.count("domain_overview", function(tx, result){
 			equals(result.rows.item(0).count, 1, "Assert the database contains a single entry");
 			sslstripwire.webdb.getSiteStats(site_url, function(tx, result) {
 				equals(result.rows.item(0).http_count, 2, "Assert HTTP count is 2");
@@ -95,7 +95,7 @@ test("Database update old https", function() {
 	stop(1000);
 	var site_url = "https://www.google.com/";
 	sslstripwire.webdb.logSite(site_url, function(){
-		sslstripwire.webdb.siteCount(function(tx, result){
+		sslstripwire.webdb.count("domain_overview", function(tx, result){
 			equals(result.rows.item(0).count, 1, "Assert the database contains a single entry");
 			sslstripwire.webdb.getSiteStats(site_url, function(tx, result) {
 				equals(result.rows.item(0).http_count, 2, "Assert HTTP count is 2");
@@ -110,7 +110,7 @@ test("Database insert second new https", function() {
 	stop(1000);
 	var site_url = "https://mail.google.com/";
 	sslstripwire.webdb.logSite(site_url, function(){
-		sslstripwire.webdb.siteCount(function(tx, result){
+		sslstripwire.webdb.count("domain_overview", function(tx, result){
 			equals(result.rows.item(0).count, 2, "Assert the database contains a both entries");
 			sslstripwire.webdb.getSiteStats(site_url, function(tx, result) {
 				equals(result.rows.item(0).http_count, 0, "Assert HTTP count is 0");

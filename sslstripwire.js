@@ -214,17 +214,6 @@ sslstripwire.log.getLimited = function(url, limit, callback){
 }
 
 /**
- * Counts the number of log entries in the log database.
- * @param function callback function to callback with the result set
- */
-sslstripwire.log.count = function(callback) {
-	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('SELECT COUNT(*) as count FROM log', [], 
-		callback, sslstripwire.webdb.onError);
-	});
-}
-
-/**
  * ============================================================================
  * Site Database
  * Holds the summary view of each domain.
@@ -349,6 +338,26 @@ sslstripwire.webdb.logSite = function(domain_url, success) {
 }
 
 /**
+ * ============================================================================
+ * Generic DB Function
+ * ============================================================================
+ */
+
+ /**
+ * Counts the number of entries in a database table (mostly for statistical
+ * purposes). Passes a result set object to the callback function containing
+ * a result of the aggregate sql function count on the number of records.
+ * @param function callback function to callback with the result set
+ */
+sslstripwire.webdb.count = function(param_table, callback) {
+	sslstripwire.webdb.db.transaction(function(tx) {
+		tx.executeSql('SELECT COUNT(*) as count FROM '+param_table,
+		[], 
+		callback, sslstripwire.webdb.onError);
+	});
+}
+
+/**
  * Clears the database of all records
  */
 sslstripwire.webdb.cleardb = function() {
@@ -360,19 +369,6 @@ sslstripwire.webdb.cleardb = function() {
 	});
 	sslstripwire.webdb.db.transaction(function(tx) {
 		tx.executeSql('DELETE FROM sse_cache', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
-	});
-}
-
-/**
- * Counts the number of domains currently being tracked (mostly for statistical
- * purposes. Passes a result set object to the callback function containing
- * a result of the aggregate sql function count on the number of records.
- * @param function callback function to callback with the result set
- */
-sslstripwire.webdb.siteCount = function(callback) {
-	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('SELECT COUNT(*) as count FROM domain_overview', [], 
-		callback, sslstripwire.webdb.onError);
 	});
 }
 
@@ -456,6 +452,9 @@ function init(){
 	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){
 		console.log("Running as extension.");
 		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);
+		/*
+		 * In plugin testing
+		 *
 		// Test out direct query for debugging purposes
 		// Doesn't run in test script because of XSS prevention but runs in
 		// our background script.
@@ -470,6 +469,7 @@ function init(){
 		sslstripwire.sse.query("http://www.google.com/", function(tx, result){
 			console.log("HTTP SUPPORT: "+result.rows.item(0).https_support);
 		});
+		*/
 	} else {
 		console.log("Running as standalone page.");
 	}

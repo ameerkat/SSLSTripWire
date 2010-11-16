@@ -11,11 +11,11 @@ function clear_db(){
 }
 
 function count_sites(){
-	chrome.extension.getBackgroundPage().sslstripwire.webdb.siteCount(
+	chrome.extension.getBackgroundPage().sslstripwire.webdb.count("domain_overview", 
 	function(tx, result){
 		document.getElementById("sites-count").innerHTML = result.rows.item(0).count;
 	});
-	chrome.extension.getBackgroundPage().sslstripwire.log.count(
+	chrome.extension.getBackgroundPage().sslstripwire.webdb.count("log", 
 	function(tx, result){
 		document.getElementById("log-count").innerHTML = result.rows.item(0).count;
 	});
