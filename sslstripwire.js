@@ -193,8 +193,20 @@ sslstripwire.log.write = function(url){
  */
 sslstripwire.log.get = function(url, callback){
   sslstripwire.webdb.db.transaction(function(tx) {
-    tx.executeSql('SELECT * FROM log WHERE domain_url = ?',
+    tx.executeSql('SELECT * FROM log WHERE domain_url = ? ORDER BY visited DESC',
 		[sslstripwire.helpers.getDomain(url)],
+		callback, sslstripwire.webdb.onError);
+  });
+}
+
+/**
+ * log.get function with added functionality to limit the number of responses
+ * useful for when querying for graph and recent info
+ */
+sslstripwire.log.getLimited = function(url, limit, callback){
+  sslstripwire.webdb.db.transaction(function(tx) {
+    tx.executeSql('SELECT * FROM log WHERE domain_url = ? ORDER BY visited DESC LIMIT ?',
+		[sslstripwire.helpers.getDomain(url), limit],
 		callback, sslstripwire.webdb.onError);
   });
 }
