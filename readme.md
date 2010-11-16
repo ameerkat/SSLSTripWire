@@ -5,12 +5,9 @@ on websites. The objective is to create a plugin that will recognize when
 something out of the ordinary is occuring with regards to encryption on
 websites you have visited in the past.
 
-<b>Under development (11/12/2010)</b>
+<b>Under development (11/15/2010)</b>
 
 ## TODO
-* Move info to popup
-	* Get info via message passing
-* Inline scriptdoc
 * Log <i>all</i> requests
 * Access pattern graphs
 * Add some documentation

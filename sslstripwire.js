@@ -5,8 +5,9 @@
  * something out of the ordinary is occuring with regards to encryption on
  * websites you have visited in the past.
  * @author Ameer Ayoub <ameer.ayoub@gmail.com>
- * @package sslstripwire
- * @modified 2010-11-11
+ * @package SSLSTripWire
+ * @version 1.0.3
+ * @modified 2010-11-15
  */
 
 var sslstripwire = {};
@@ -16,13 +17,25 @@ sslstripwire.helpers = {};
 sslstripwire.sse = {};
 
 /**
+ * ============================================================================
  * Settings
+ * ============================================================================
  */
 sslstripwire.settings.debug = true;
 sslstripwire.settings.sse_url = "https://www.wreferral.com/SSEService/query.do";
+sslstripwire.settings.sse_cache = 60*60*24*7; // one week
 
 /**
+ * ============================================================================
  * Helper Functions
+ * ============================================================================
+ */
+
+/**
+ * Convenience function to parse the domain out of a URL (via regex).
+ * @param string url URL of the site to get the domain of
+ * @return string domain of the url or null if the site is not http/https
+ * 		(e.g. file, chrome-extensions, etc.)
  */
 sslstripwire.helpers.getDomain = function(url) {
 	var regex = /^https?:\/\/(.*?\.?.*?\..*?)\//;
@@ -34,6 +47,12 @@ sslstripwire.helpers.getDomain = function(url) {
 	}
 }
 
+/**
+ * Convenience function to get the method of the HTTP transfer
+ * (being either HTTP or HTTPS)
+ * @param string url URL of the site
+ * @return string 'http' or 'https'
+ */
 sslstripwire.helpers.getMethod = function(url) {
 	if(url.substring(0, 5) == "https"){
 		return "https";
@@ -45,7 +64,18 @@ sslstripwire.helpers.getMethod = function(url) {
 /**
  * ============================================================================
  * SSE Integration
+ * DB Schema:
+ * sse_cache(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_support INT,
+ * phishing_site INT, expires DATETIME)
  * ============================================================================
+ */
+
+/**
+ * directQuery does a query against the secure search engine (wreferral) via
+ * ajax. Call query if you want to just do a query, as that does caching of
+ * the results, based on the user settable expiration time.
+ * @param string url URL of the domain to query
+ * @param function callback callback function on success
  */
 sslstripwire.sse.directQuery = function(url, callback){
 	$.ajax({
@@ -56,29 +86,74 @@ sslstripwire.sse.directQuery = function(url, callback){
 	});
 }
 
+/**
+ * Queries for a domain in the SSE, either directly or searches through the
+ * cache if available.
+ * @param string url URL of the domain to query
+ * @param function callback function to callback to with the result
+ */
+sslstripwire.sse.query = function(url, callback){
+	sslstripwire.webdb.db.transaction(function(tx) {
+    tx.executeSql('SELECT * FROM sse_cache WHERE domain_url = ? LIMIT 1',
+		[sslstripwire.helpers.getDomain(url)],
+		function(tx, result){
+		
+		}, sslstripwire.webdb.onError);
+	});
+	// 2. If in db then return result
+	// 3. If not then directy query and then return result
+}
 
 /**
  * ============================================================================
- * HTML5 WebDB
+ * Site Database
+ * Holds the summary view of each domain.
  * ============================================================================
  */
+
 sslstripwire.webdb = {};
 sslstripwire.webdb.db = null;
+
+/**
+ * Opens the database (should be called on page initialization.)
+ */
 sslstripwire.webdb.open = function() {
 	var dbSize = 32 * 1024 * 1024; // 32MB
 	sslstripwire.webdb.db = openDatabase('site_db', '0.1', 'SSLStripWire Site Database', dbSize);
 }
 
+/**
+ * Create all the database tables if they don't exist.
+ * Database tables:
+ * 		domain_overview (contains general statistics about a given domain, such
+ *			as total http/https requests.)
+ * 		sse_cache (contains cached versions of the SSE queries)
+ *		log (contains all records, similar to browser history, contains some
+ *			redundant fields to improve search time performance)
+ */
 sslstripwire.webdb.createTable = function() {
 	sslstripwire.webdb.db.transaction(function(tx) {
 		// Main Site Database
 		tx.executeSql('CREATE TABLE IF NOT EXISTS ' + 
-                  'site_db(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_count INT, http_count INT, last_visited DATETIME)', []);
+            'domain_overview(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_count INT, http_count INT, last_visited DATETIME)', []);
+		// SSE Cache
+		tx.executeSql('CREATE TABLE IF NOT EXISTS ' + 
+            'sse_cache(ID INTEGER PRIMARY KEY ASC, domain_url TEXT, https_support INT, phishing_site INT, expires DATETIME)', []);
+		// Site History Log (for analysis)
+		// Mode : 0 = HTTP, 1 = HTTPS
+		// Stored for convenience, we could always calculate it from url
+		// same with domain_url (so we can join tables without calculating each time)
+		tx.executeSql('CREATE TABLE IF NOT EXISTS ' + 
+			'log(ID INTEGER PRIMARY KEY ASC, full_url TEXT, domain_url TEXT, mode INT, visited DATETIME)', []);
 	});
 }
 
 /**
- * Callbacks
+ * Default Callbacks
+ */
+
+/**
+ * Default success callback, prints out to console a success message.
  */
 sslstripwire.webdb.onSuccess = function(tx, r) {
 	if(sslstripwire.settings.debug){
@@ -86,6 +161,9 @@ sslstripwire.webdb.onSuccess = function(tx, r) {
 	}
 }
 
+/**
+ * Default error callback, prints out error message to console.
+ */
 sslstripwire.webdb.onError = function(tx, e) {
 	if(sslstripwire.settings.debug){
 		console.log('Error: ' + e.message );
@@ -94,16 +172,29 @@ sslstripwire.webdb.onError = function(tx, e) {
 
 /**
  * DB Functions
- * These are all asynchronous
+ * These are all asynchronous (as is almost everything here)
+ */
+
+/**
+ * Passes back domain statistics in the form of a database record to the
+ * callback function. Row length of result set will be 0 if the site is not
+ * in the database.
+ * @param string domain_url URL of the domain to get statistics for
+ * @param function callback function to callback with results
  */
 sslstripwire.webdb.getSiteStats = function(domain_url, callback) {
   sslstripwire.webdb.db.transaction(function(tx) {
-    tx.executeSql('SELECT * FROM site_db WHERE domain_url = ? LIMIT 1',
+    tx.executeSql('SELECT * FROM domain_overview WHERE domain_url = ? LIMIT 1',
 		[sslstripwire.helpers.getDomain(domain_url)],
 		callback, sslstripwire.webdb.onError);
   });
 }
 
+/**
+ * Logs site to database and calls back to callback function on success
+ * @param string domain_url domain url to log
+ * @param function success success callback function
+ */
 sslstripwire.webdb.logSite = function(domain_url, success) {
     if(sslstripwire.helpers.getDomain(domain_url) === null){
 		success();
@@ -121,14 +212,14 @@ sslstripwire.webdb.logSite = function(domain_url, success) {
 		{
 			var i_result = result;
 			sslstripwire.webdb.db.transaction(function(tx) {
-				tx.executeSql('UPDATE site_db SET https_count = ?, http_count = ?, last_visited = ? WHERE ID = ?', 
+				tx.executeSql('UPDATE domain_overview SET https_count = ?, http_count = ?, last_visited = ? WHERE ID = ?', 
 				[i_result.rows.item(0).https_count + https_count, i_result.rows.item(0).http_count + http_count, now, i_result.rows.item(0).ID],
 				success,
 				sslstripwire.webdb.onError);
 			});
 		} else {
 			sslstripwire.webdb.db.transaction(function(tx) {
-				tx.executeSql('INSERT INTO site_db(domain_url, https_count, http_count, last_visited) VALUES (?,?,?,?)', 
+				tx.executeSql('INSERT INTO domain_overview(domain_url, https_count, http_count, last_visited) VALUES (?,?,?,?)', 
 				[sslstripwire.helpers.getDomain(domain_url), https_count, http_count, now],
 				success,
 				sslstripwire.webdb.onError);
@@ -137,15 +228,24 @@ sslstripwire.webdb.logSite = function(domain_url, success) {
 	});
 }
 
+/**
+ * Clears the database of all records
+ */
 sslstripwire.webdb.cleardb = function() {
 	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('DELETE FROM site_db', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
+		tx.executeSql('DELETE FROM domain_overview', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
 	});
 }
 
+/**
+ * Counts the number of domains currently being tracked (mostly for statistical
+ * purposes. Passes a result set object to the callback function containing
+ * a result of the aggregate sql function count on the number of records.
+ * @param function callback function to callback with the result set
+ */
 sslstripwire.webdb.siteCount = function(callback) {
 	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('SELECT COUNT(*) as count FROM site_db', [], 
+		tx.executeSql('SELECT COUNT(*) as count FROM domain_overview', [], 
 		callback, sslstripwire.webdb.onError);
 	});
 }
@@ -176,6 +276,12 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 	});
 }
 
+/**
+ * Does some message passing to the content script to display the statistics
+ * inline in the page. This is no longer being used as of 1.0.3 and later.
+ * @deprecated
+ * @param Tab tab the tab of the requestor to send the message to
+ */
 sslstripwire.handlers.onClick = function(tab) {
 	sslstripwire.webdb.getSiteStats(tab.url, function(tx, result){
 		var https_count = 0;
@@ -208,6 +314,10 @@ sslstripwire.handlers.onClick = function(tab) {
  * Init
  * ============================================================================
  */
+/**
+ * Called on page load, opens database and creates tables and attaches some
+ * callbacks for events.
+ */
 function init(){
 	sslstripwire.webdb.open();
 	sslstripwire.webdb.createTable();
@@ -216,8 +326,9 @@ function init(){
 	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){
 		console.log("Running as extension");
 		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);
-		chrome.browserAction.onClicked.addListener(sslstripwire.handlers.onClick);
-		// Test out direct query
+		// Test out direct query for debugging purposes
+		// Doesn't run in test script because of XSS prevention but runs in
+		// our background script.
 		sslstripwire.sse.directQuery("www.google.com", function(data){
 			console.log(data);
 		});
