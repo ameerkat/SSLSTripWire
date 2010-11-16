@@ -14,6 +14,9 @@
 function init(){
 	chrome.tabs.getSelected(null, function(tab){
 		var bgPage = chrome.extension.getBackgroundPage();
+		/**
+		 * Get and write out site statistics and SSE information to the popup
+		 */
 		bgPage.sslstripwire.webdb.getSiteStats(tab.url, function(tx, result){
 			if(result.rows.length > 0){
 				https_count = result.rows.item(0).https_count;
@@ -26,6 +29,11 @@ function init(){
 				document.write("Info not available");
 			}
 		});
+		
+		/**
+		 * Google Graph API Graph
+		 * Displays the access pattern as markers on a graph
+		 */
 		bgPage.sslstripwire.log.getLimited(tab.url, 10, function(tx, result){
 			var point_string = "";
 			var color = "00FF00";
