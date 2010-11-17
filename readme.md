@@ -16,7 +16,5 @@ attacks.
 * Improved heuristics
 * ?Detailed domain overview page
 * Success <i>and</i> error callback parameters to all functions
-* SSE integration options
-* Save/Load options to local storage
 * Classifier for access patterns
 * Add some documentation
