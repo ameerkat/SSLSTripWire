@@ -100,6 +100,19 @@ sslstripwire.helpers.rewrite = function(url) {
 }
 
 /**
+ * Returns the url without any get variables or anchor references
+ */
+sslstripwire.helpers.removeParams = function(url) {
+	var regex = /(.*?)(\?|#)/;
+	var match = regex.exec(url);
+	if(match){
+		return match[1];
+	} else {
+		return null;
+	}
+}
+
+/**
  * ============================================================================
  * SSE Integration
  * DB Schema:

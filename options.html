@@ -30,7 +30,7 @@ function save(){
 	var settings = JSON.parse(localStorage.settings);
 	settings.sse_enabled = document.getElementById("sse_enabled").checked;
 	settings.display_graph = document.getElementById("display_graph").checked;
-	settings.sse_cache = document.getElementById("sse_cache").value;
+	settings.sse_cache = parseInt(document.getElementById("sse_cache").value);
 	settings.sse_url = document.getElementById("sse_url").value;
 	settings.debug = document.getElementById("debug").checked;
 	localStorage.settings = JSON.stringify(settings);
