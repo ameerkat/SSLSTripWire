@@ -24,7 +24,8 @@ function init(){
 				document.write("<pre><b>Overview</b>\nDomain:\t"+bgPage.sslstripwire.helpers.getDomain(tab.url)+"\nHTTP:\t"+http_count + "\nHTTPS:\t" + https_count + "\n");
 				if(bgPage.sslstripwire.settings.sse_enabled){
 					bgPage.sslstripwire.sse.query(tab.url, function(tx, result){
-						document.write("\n<b>SSE Info</b>\nHTTPS:\t\t"+result.rows.item(0).https_support+"\nPhishing:\t"+result.rows.item(0).phishing_site+"</pre>");
+					//Removed b/c utterly useless: Phishing:\t"+result.rows.item(0).phishing_site+"
+						document.write("\n<b>SSE Info</b>\nHTTPS:\t\t"+result.rows.item(0).https_support+"\n</pre>");
 					});
 				}
 			} else {
