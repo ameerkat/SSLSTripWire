@@ -49,7 +49,8 @@ function init(){
 					point_string += "o,"+color+",0,"+i+",10";
 				}
 				if(point_string != "")
-					document.write("\n<b>Access Pattern</b>\n<img src=\"http://chart.apis.google.com/chart?chf=c,s,FFFFFF&chxr=0,0,10|1,0,2&chxs=1,FFFFFF,8,0,l,FFFFFF&chxt=x,y&chs=200x40&cht=ls&chco=969696&chd=s:ffffffffff&chls=1,-1,-1&chm="+point_string+"\" />");
+					document.write("\n<b>Access Pattern</b>\n" + 
+					bgPage.sslstripwire.helpers.generateGraph(point_string));
 			});
 		}
 	});

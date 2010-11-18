@@ -37,6 +37,8 @@ test("Check url parameter removing", function() {
 		"http://www.google.com/search", "Just parameters");
 	equals(sslstripwire.helpers.removeParams("http://www.google.com/search#hl=en&expIds=17259,17311,18167,23756,24692,24878,24879,25659,25754,25854,26339,26788,27400,27606,27630&sugexp=ldymls&xhr=t&q=search+for+this+asdf&cp=20&qe=c2VhcmNoIGZvciB0aGlzIGFzZGY&qesig=mEYiziMTs8a0cIo-KRpKuQ&pkc=AFgZ2tkTlLYMRv5Jzok8MnowUfkx1Zt-baO4tS768wjWt-IITTLjqSPlieCskkM3Cjw-W7JWRJLlqrNLTzw2Zs-lVMJy3jspGQ&pf=p&sclient=psy&aq=f&aqi=&aql=&oq=search+for+this+asdf&gs_rfai=&pbx=1&fp=c3a0e6be9650fe91"), 
 		"http://www.google.com/search", "Just link anchor");
+	equals(sslstripwire.helpers.removeParams("http://www.google.com/search"), 
+		"http://www.google.com/search", "Straight through");
 });
 
 

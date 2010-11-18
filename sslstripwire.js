@@ -7,7 +7,7 @@
  * @author Ameer Ayoub <ameer.ayoub@gmail.com>
  * @package SSLSTripWire
  * @version 1.0.4
- * @modified 2010-11-16
+ * @modified 2010-11-17
  */
 
 // Main extension namespace
@@ -101,6 +101,9 @@ sslstripwire.helpers.rewrite = function(url) {
 
 /**
  * Returns the url without any get variables or anchor references
+ * @param string url the string of the url to remove the parameters from
+ * @return string the string with the parameters removed, returns null if the
+ *		url is invalid.
  */
 sslstripwire.helpers.removeParams = function(url) {
 	var regex = /(.*?)(\?|#)/;
@@ -108,8 +111,20 @@ sslstripwire.helpers.removeParams = function(url) {
 	if(match){
 		return match[1];
 	} else {
-		return null;
+		return url;
 	}
+}
+
+/**
+* Given a string of the points to plot, generates the graph image html to
+* display the graph with the given point using the google graph api
+* @param string points a string of the points to graph
+* @return string a string containing the html of the points
+*/
+sslstripwire.helpers.generateGraph = function(points) {
+	return "<img src=\"http://chart.apis.google.com/chart?chf=c,s,FFFFFF" + 
+	"&chxr=0,0,10|1,0,2&chxs=1,FFFFFF,8,0,l,FFFFFF&chxt=x,y&chs=200x40&cht=ls" +
+	"&chco=969696&chd=s:ffffffffff&chls=1,-1,-1&chm="+points+"\" />";
 }
 
 /**
@@ -148,6 +163,10 @@ sslstripwire.sse.directQuery = function(url, callback){
  * @param function callback function to callback to with the result
  */
 sslstripwire.sse.query = function(url, callback){
+	if(sslstripwire.helpers.getDomain(url) === null){
+		callback(null, null);
+		return;
+	}
 	var now = new Date();
 	var expires_update = new Date(now.getTime() + sslstripwire.settings.sse_cache);
 	sslstripwire.webdb.db.transaction(function(tx) {
@@ -435,39 +454,63 @@ sslstripwire.webdb.cleardb = function() {
  */
 sslstripwire.handlers = {};
  
-/* 1. On a page request check if page is stored before and get statistics
- * 		a. Add Navigation Handler to fire on request
- *		b. Search local database for the site domain
- *		c. Load statistics
+/**
+ * Add a basic hook to evaluate page encryption on form submission
+ * @todo this
+ */
+ 
+/**
+ * @todo write this function header block comment
  */
 sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 	var url = tab.url;
-	var http_count = 0;
-	var https_count = 0;
-	
 	sslstripwire.log.write(url);
-	
-	sslstripwire.webdb.getSiteStats(url, function(tx, result){
-		if(result.rows.length > 0){
-			https_count = result.rows.item(0).https_count;
-			http_count = result.rows.item(0).http_count;
-			// Simple detection here
+	sslstripwire.webdb.getSiteStats(url, function(tx, stat_result){
+		if(stat_result.rows.length > 0){
+			var https_count = stat_result.rows.item(0).https_count;
+			var http_count = stat_result.rows.item(0).http_count;		
 			sslstripwire.sse.query(url, function(tx, result){
-				if(result.rows.length > 0){
-					if(sslstripwire.settings.sse_enabled && result.rows.item(0).https_support){
-						// Do rewrite to HTTPS
-					}
-				} else {
+				if(result 
+				&& ((result.rows.length > 0 && sslstripwire.settings.sse_enabled && result.rows.item(0).https_support == "yes")
+				|| https_count > 0) 
+				&& sslstripwire.helpers.getMethod(url) != "https"){
+					console.log("Previous HTTPS Requests: "+https_count);
+					console.log("SSE Says: "+ result.rows.item(0).https_support);
+					// Display warning error with warning based on previous HTTPS or SSE support
+					var this_reason = "";
+					if(result.rows.length > 0 && sslstripwire.settings.sse_enabled && result.rows.item(0).https_support == "yes")
+						this_reason += "sse";
 					if(https_count > 0){
-						// Enforce rewrite
-						// TODO hook onto form post instead of all requests
-					} else {
-						// Do nothing
+						if(this_reason == ""){
+							this_reason += "previous";
+						} else {
+							this_reason += " previous";
+						}
 					}
+					chrome.browserAction.setIcon({path: "images/lock_break.png"});
+					chrome.tabs.sendRequest(tab.id, {mode: "warning", reason: this_reason}, function(response){
+						console.log("Warning emitted for Mixed, reason: "+this_reason);
+					});
+				} else {
+					// Everything is fine :)
+					chrome.browserAction.setIcon({path: "images/lock.png"});
 				}
 			});
 		} else {
-			// No records then just use SSE if enabled
+			sslstripwire.sse.query(url, function(tx, result){
+				if(result
+				&& (result.rows.length > 0 && sslstripwire.settings.sse_enabled && result.rows.item(0).https_support == "yes") 
+				&& sslstripwire.helpers.getMethod(url) != "https"){
+					// Display warning error with reason based solely on SSE
+					chrome.browserAction.setIcon({path: "images/lock_break.png"});
+					chrome.tabs.sendRequest(tab.id, {mode: "warning", reason: "sse"}, function(response){
+						console.log("Warning emitted for SSE");
+					});
+				} else {
+					// Everything is fine :)
+					chrome.browserAction.setIcon({path: "images/lock.png"});
+				}
+			});
 		}
 		sslstripwire.webdb.logSite(url, function(){});
 	});

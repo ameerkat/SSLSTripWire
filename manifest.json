@@ -11,5 +11,12 @@
 	"tabs", "http://*/*", "https://*/*", "unlimitedStorage"
   ],
   "background_page": "background.html",
-  "options_page" : "options.html"
+  "options_page" : "options.html",
+  "content_scripts": [
+		{
+			"matches": ["http://*/*", "https://*/*"],
+			"css": ["sslstripwire.content.css"],
+			"js": ["sslstripwire.content.js"]
+		}
+	]
 }
