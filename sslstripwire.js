@@ -180,7 +180,8 @@ sslstripwire.sse.query = function(url, callback){
 					callback(tx, result);
 				} else {
 				if(sslstripwire.settings.debug){
-					console.log("UPDATING record for domain ("+url+") "+ sslstripwire.helpers.getDomain(url));
+					console.log("UPDATING record for domain ("+url+") " 
+						+ sslstripwire.helpers.getDomain(url));
 				}
 				// If expired then perform update and return result
 					sslstripwire.sse.directQuery(url, function(data){
@@ -293,7 +294,8 @@ sslstripwire.webdb.db = null;
  */
 sslstripwire.webdb.open = function() {
 	var dbSize = 32 * 1024 * 1024; // 32MB
-	sslstripwire.webdb.db = openDatabase('site_db', '0.1', 'SSLStripWire Site Database', dbSize);
+	sslstripwire.webdb.db = openDatabase('site_db', '0.1', 
+		'SSLStripWire Site Database', dbSize);
 }
 
 /**
@@ -303,7 +305,8 @@ sslstripwire.webdb.open = function() {
  */
 sslstripwire.webdb.switchTo = function(db_name){
 	var dbSize = 32 * 1024 * 1024; // 32MB
-	sslstripwire.webdb.db = openDatabase(db_name, '0.2', 'SSLStripWire Site Database (Dev)', dbSize);
+	sslstripwire.webdb.db = openDatabase(db_name, '0.2', 
+		'SSLStripWire Site Database (Dev)', dbSize);
 }
 
 /**
@@ -437,13 +440,16 @@ sslstripwire.webdb.count = function(param_table, callback) {
  */
 sslstripwire.webdb.cleardb = function() {
 	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('DELETE FROM domain_overview', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
+		tx.executeSql('DELETE FROM domain_overview', [],
+		sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
 	});
 	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('DELETE FROM log', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
+		tx.executeSql('DELETE FROM log', [],
+		sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
 	});
 	sslstripwire.webdb.db.transaction(function(tx) {
-		tx.executeSql('DELETE FROM sse_cache', [], sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
+		tx.executeSql('DELETE FROM sse_cache', [],
+		sslstripwire.webdb.onSuccess, sslstripwire.webdb.onError);
 	});
 }
 
@@ -471,14 +477,18 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 			var http_count = stat_result.rows.item(0).http_count;		
 			sslstripwire.sse.query(url, function(tx, result){
 				if(result 
-				&& ((result.rows.length > 0 && sslstripwire.settings.sse_enabled && result.rows.item(0).https_support == "yes")
+				&& ((result.rows.length > 0 
+				&& sslstripwire.settings.sse_enabled 
+				&& result.rows.item(0).https_support == "yes")
 				|| https_count > 0) 
 				&& sslstripwire.helpers.getMethod(url) != "https"){
 					console.log("Previous HTTPS Requests: "+https_count);
 					console.log("SSE Says: "+ result.rows.item(0).https_support);
 					// Display warning error with warning based on previous HTTPS or SSE support
 					var this_reason = "";
-					if(result.rows.length > 0 && sslstripwire.settings.sse_enabled && result.rows.item(0).https_support == "yes")
+					if(result.rows.length > 0 
+					&& sslstripwire.settings.sse_enabled 
+					&& result.rows.item(0).https_support == "yes")
 						this_reason += "sse";
 					if(https_count > 0){
 						if(this_reason == ""){
@@ -488,9 +498,12 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 						}
 					}
 					chrome.browserAction.setIcon({path: "images/lock_break.png"});
-					chrome.tabs.sendRequest(tab.id, {mode: "warning", reason: this_reason}, function(response){
+					chrome.tabs.sendRequest(tab.id, {mode: "warning",
+						reason: this_reason,
+						rewriteUrl: sslstripwire.helpers.rewrite(url)},
+						function(response){
 						console.log("Warning emitted for Mixed, reason: "+this_reason);
-					});
+						});
 				} else {
 					// Everything is fine :)
 					chrome.browserAction.setIcon({path: "images/lock.png"});
@@ -499,13 +512,18 @@ sslstripwire.handlers.onWebRequest = function(tabId, changeInfo, tab){
 		} else {
 			sslstripwire.sse.query(url, function(tx, result){
 				if(result
-				&& (result.rows.length > 0 && sslstripwire.settings.sse_enabled && result.rows.item(0).https_support == "yes") 
+				&& (result.rows.length > 0 
+				&& sslstripwire.settings.sse_enabled 
+				&& result.rows.item(0).https_support == "yes") 
 				&& sslstripwire.helpers.getMethod(url) != "https"){
 					// Display warning error with reason based solely on SSE
 					chrome.browserAction.setIcon({path: "images/lock_break.png"});
-					chrome.tabs.sendRequest(tab.id, {mode: "warning", reason: "sse"}, function(response){
+					chrome.tabs.sendRequest(tab.id, {mode: "warning", 
+						reason: "sse", 
+						rewriteUrl: sslstripwire.helpers.rewrite(url)},
+						function(response){
 						console.log("Warning emitted for SSE");
-					});
+						});
 				} else {
 					// Everything is fine :)
 					chrome.browserAction.setIcon({path: "images/lock.png"});
@@ -556,7 +574,8 @@ function init(){
 	
 	// If it's an extension
 	console.log("Determining context of execution");
-	if(document.URL.length > 18 && document.URL.substring(0, 19) == "chrome-extension://"){
+	if(document.URL.length > 18 
+	&& document.URL.substring(0, 19) == "chrome-extension://"){
 		console.log("Running as extension.");
 		chrome.tabs.onUpdated.addListener(sslstripwire.handlers.onWebRequest);
 		/*

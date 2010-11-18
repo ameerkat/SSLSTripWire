@@ -26,4 +26,15 @@
 	padding: 20px;
 	font-size: 16pt;
 	font-weight: bold;
+	font-family: helvetica sans-serif;
+	opacity: 1;
+}
+
+#sslstripwire-warning-message a {
+	color: #0661BE;
+	text-decoration: none;
+}
+
+#sslstripwire-warning-message a:hover {
+	color: #024286;
 }

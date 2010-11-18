@@ -1,6 +1,6 @@
 {
   "name": "SSLSTripWire",
-  "version": "0.1.0.4",
+  "version": "0.1.1.7",
   "description": "Attempts to detect and prevent SSL Strip attacks.",
   "browser_action": {
 	"default_title": "Display Page Statistics",
@@ -14,7 +14,7 @@
   "options_page" : "options.html",
   "content_scripts": [
 		{
-			"matches": ["http://*/*", "https://*/*"],
+			"matches": ["http://*/*"],
 			"css": ["sslstripwire.content.css"],
 			"js": ["sslstripwire.content.js"]
 		}
