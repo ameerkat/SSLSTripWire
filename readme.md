@@ -19,3 +19,5 @@ attacks.
 * Site whitelist to always rewrite
 * Remember tab icon state
 * Address the concurrency issues with db (leading to duplicates)
+* Redo access pattern graphs to just be color blocks
+* Ignore any 404d requests in counter
