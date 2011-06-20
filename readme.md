@@ -1,3 +1,8 @@
+This project is no longer being developed, a good alternative is KB SSL Enforcer
+https://chrome.google.com/webstore/detail/flcpelgcagfhfoegekianiofphddckof
+
+This project is only here for reference with regards to creating chrome extensions.
+
 #SSLSTripWire
 SSL Strip Wire is an attempt to create a browser extension to help augment
 the fact that we are human when it comes to noticing encryption security
@@ -5,8 +10,6 @@ on websites. The objective is to create a plugin that will recognize when
 something out of the ordinary is occuring with regards to encryption on
 websites you have visited in the past in an attempt to prevent SSL Strip 
 attacks.
-
-<b>Under development (11/19/2010)</b>
 
 ## Screenshots
 ![Sample Popup Info](https://github.com/ameerkat/SSLSTripWire/raw/master/images/readme-popup-demo.jpg)
